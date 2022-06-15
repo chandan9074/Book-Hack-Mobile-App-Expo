@@ -7,12 +7,22 @@ import {
   Image,
   SafeAreaView,
   TextInput,
+  FlatList,
+  TouchableOpacity,
+  ScrollView,
 } from "react-native";
 import { Feather, FontAwesome } from "@expo/vector-icons";
+// import { useTailwind } from "tailwind-rn";
+// import { TailwindProvider } from "tailwind-rn";
+// import utilities from "./tailwind.json";
+// import tailwind from "tailwind-rn";
 
+import { popularList, authorList, bookList } from "../../utils/data";
 import Img from "../../constants/Images";
 
-const Home = () => {
+const Home = ({ navigation }) => {
+  // const tailwind = useTailwind();
+
   const onHorizontalSelectedIndexChange = (index) => {
     /* tslint:disable: no-console */
     // console.log("horizontal change to", index);
@@ -191,7 +201,198 @@ const Home = () => {
     );
   };
 
-  return <SafeAreaView>{renderHeader()}</SafeAreaView>;
+  const renderPopularList = () => {
+    // console.log("hello", popularList);
+    const renderItem = ({ item }) => {
+      // console.log("hello", item);
+      return (
+        <TouchableOpacity
+          style={styles.popularListContentContainer}
+          onPress={() => navigation.navigate("BookList", { bookList, item })}
+        >
+          <Image
+            source={item.bgImg}
+            resizeMode="cover"
+            style={{ width: "100%", height: "100%", borderRadius: 10 }}
+          ></Image>
+          <View
+            style={{
+              position: "absolute",
+              width: "100%",
+              height: 120,
+              borderRadius: 10,
+              top: 0,
+              backgroundColor: "black",
+              opacity: 0.2,
+            }}
+          />
+          <View style={{ position: "absolute", top: 30, left: 10 }}>
+            <Text style={styles.popuListContent1}>Top 10 List</Text>
+            <View
+              style={{
+                flexDirection: "row",
+                alignItems: "center",
+              }}
+            >
+              <View
+                style={{
+                  height: 3,
+                  width: 35,
+                  backgroundColor: "white",
+                  borderRadius: 25,
+                  marginTop: 5,
+                }}
+              />
+              <View
+                style={{
+                  height: 3,
+                  width: 10,
+                  backgroundColor: "#e87425",
+                  borderRadius: 25,
+                  marginTop: 5,
+                  marginLeft: 3,
+                }}
+              />
+              <View
+                style={{
+                  height: 3,
+                  width: 15,
+                  backgroundColor: "white",
+                  borderRadius: 25,
+                  marginTop: 5,
+                  marginLeft: 3,
+                }}
+              />
+            </View>
+            <Text style={styles.popuListContent2}>{item.name}</Text>
+          </View>
+        </TouchableOpacity>
+      );
+    };
+
+    return (
+      <View
+        style={{
+          paddingTop: 15,
+          paddingLeft: 15,
+        }}
+      >
+        <Text style={styles.contentHeading}>Popular List</Text>
+        <FlatList
+          data={popularList}
+          horizontal
+          showsHorizontalScrollIndicator={false}
+          keyExtractor={(item) => `${item.id}`}
+          renderItem={renderItem}
+          contentContainerStyle={{ paddingVertical: 15 }}
+        />
+      </View>
+    );
+  };
+
+  const renderAuthor = () => {
+    const renderItem = ({ item }) => (
+      <TouchableOpacity
+        style={{ marginRight: 15, alignItems: "center" }}
+        onPress={() => navigation.navigate("Author", { bookList, item })}
+      >
+        <Image
+          source={item.img}
+          resizeMode="cover"
+          style={{ width: 40, height: 40, borderRadius: 100 }}
+        />
+        <Text style={{ marginTop: 7, fontSize: 12, fontWeight: "700" }}>
+          {item.firstName + " " + item.lastName}
+        </Text>
+      </TouchableOpacity>
+    );
+
+    return (
+      <View
+        style={{
+          paddingHorizontal: 15,
+        }}
+      >
+        <Text style={styles.contentHeading}>Most Popular Authors</Text>
+        <FlatList
+          data={authorList}
+          horizontal
+          showsHorizontalScrollIndicator={false}
+          keyExtractor={(item) => `${item.id}`}
+          renderItem={renderItem}
+          contentContainerStyle={{ paddingVertical: 15 }}
+        />
+      </View>
+    );
+  };
+
+  const renderBooks = () => {
+    const renderItem = ({ item }) => (
+      <TouchableOpacity
+        style={styles.bookContainer}
+        onPress={() => navigation.navigate("BookDetails", { item })}
+      >
+        <View
+          style={{
+            shadowColor: "black",
+            shadowOffset: {
+              width: 0,
+              height: 10,
+            },
+            shadowOpacity: 1,
+            shadowRadius: 10,
+            elevation: 5,
+          }}
+        >
+          <Image
+            source={item.img}
+            resizeMode="cover"
+            style={styles.bookImage}
+          />
+        </View>
+        <Text
+          style={{
+            marginTop: 7,
+            fontSize: 13,
+            fontWeight: "600",
+            fontStyle: "italic",
+            color: "gray",
+          }}
+        >
+          By {item.authorName}
+        </Text>
+        <Text style={{ fontSize: 18, fontWeight: "700" }}>{item.name}</Text>
+      </TouchableOpacity>
+    );
+    return (
+      <View
+        style={{
+          paddingHorizontal: 15,
+        }}
+      >
+        <Text style={styles.contentHeading}>Tranding Books</Text>
+        <FlatList
+          data={bookList}
+          horizontal
+          showsHorizontalScrollIndicator={false}
+          keyExtractor={(item) => `${item.id}`}
+          renderItem={renderItem}
+          contentContainerStyle={{ paddingVertical: 15 }}
+        />
+      </View>
+    );
+  };
+
+  return (
+    <SafeAreaView>
+      <ScrollView style={{ marginBottom: 70 }}>
+        {renderHeader()}
+        {renderPopularList()}
+        {renderAuthor()}
+        {renderBooks()}
+      </ScrollView>
+    </SafeAreaView>
+  );
 };
 
 export default Home;
@@ -212,5 +413,50 @@ const styles = StyleSheet.create({
   text: {
     color: "#fff",
     fontSize: 36,
+  },
+  contentHeading: {
+    fontSize: 16,
+    fontWeight: "700",
+  },
+  popularListContentContainer: {
+    width: 200,
+    borderRadius: 20,
+    height: 120,
+    marginRight: 15,
+    position: "relative",
+    shadowColor: "black",
+    shadowOffset: {
+      width: 0,
+      height: 10,
+    },
+    shadowOpacity: 1,
+    shadowRadius: 10,
+    elevation: 5,
+
+    // backgroundColor: "red",
+  },
+  bookContainer: {
+    width: 200,
+    borderRadius: 20,
+    // height: 120,
+    marginRight: 15,
+    position: "relative",
+
+    marginRight: 15,
+  },
+  bookImage: {
+    width: "100%",
+    height: 300,
+    borderRadius: 10,
+  },
+  popuListContent1: {
+    fontSize: 15,
+    color: "white",
+    fontWeight: "bold",
+  },
+  popuListContent2: {
+    fontSize: 18,
+    color: "white",
+    fontWeight: "bold",
   },
 });
