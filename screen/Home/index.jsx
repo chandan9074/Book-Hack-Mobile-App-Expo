@@ -330,7 +330,7 @@ const Home = ({ navigation }) => {
     const renderItem = ({ item }) => (
       <TouchableOpacity
         style={styles.bookContainer}
-        onPress={() => navigation.navigate("BookDetails", { item })}
+        onPress={() => navigation.navigate("SingleBook", { item, bookList })}
       >
         <View
           style={{
