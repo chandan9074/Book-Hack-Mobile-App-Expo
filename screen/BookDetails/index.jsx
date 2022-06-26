@@ -9,19 +9,19 @@ import {
   Alert,
 } from "react-native";
 import { CardField, useConfirmPayment } from "@stripe/stripe-react-native";
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
+import { Provider, Modal, Toast } from "@ant-design/react-native";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 import {
-  Provider,
-  Button,
-  Modal,
-  Toast,
-  WhiteSpace,
-  WingBlank,
-} from "@ant-design/react-native";
-import { FontAwesome, FontAwesome5, Ionicons } from "@expo/vector-icons";
+  FontAwesome,
+  FontAwesome5,
+  Ionicons,
+  Entypo,
+} from "@expo/vector-icons";
 
 const BookDetails = ({ route, navigation }) => {
   const { item } = route.params;
+  const [isBookmarked, setIsBookmarked] = useState(false);
   const [count, setCount] = useState(0);
   const [modalVisible, setModalVisible] = useState(false);
   const [cardDetails, setCardDetails] = useState();
@@ -29,22 +29,75 @@ const BookDetails = ({ route, navigation }) => {
   const [email, setEmail] = useState();
   const [number, setNumber] = useState();
   const [address, setAddress] = useState();
-  const { confirmPayment, loading } = useConfirmPayment();
+  const [loading, setLoading] = useState(false);
+  const { confirmPayment } = useConfirmPayment();
 
+  useEffect(() => {
+    async function fetchData() {
+      const bookmarkData = await AsyncStorage.getItem("bookmarks");
+      const data = JSON.parse(bookmarkData);
+      if (data.includes(item.id)) {
+        setIsBookmarked(true);
+      } else {
+        setIsBookmarked(false);
+      }
+    }
+    fetchData();
+  }, []);
+
+  const API_URL = "http://192.168.0.107:5000";
   // const handlePayment
+  const fetchPaymentIntentClientSecret = async () => {
+    const response = await fetch(`${API_URL}/create-payment-intent`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+    });
+    // console.log(response);
+    const { clientSecret, error } = await response.json();
+    return { clientSecret, error };
+  };
 
   const handlePayment = async () => {
+    setLoading(true);
+    // console.log(cardDetails, email, name, number, address);
     if (!cardDetails?.complete || !email || !name || !number || !address) {
       Alert.alert(
         "Please enter the complete card details and other information"
       );
+      setLoading(false);
     }
     const billingDetails = {
-      name,
-      email,
-      number,
-      address,
+      // name,
+      email: email,
+      // number,
+      // address,
     };
+    try {
+      const { clientSecret, error } = await fetchPaymentIntentClientSecret();
+      // console.log("clien", clientSecret);
+      // console.log("sfd", error);
+      if (error) {
+        // console.log("Unable to process payment");
+      } else {
+        const { paymentIntent, error } = await confirmPayment(clientSecret, {
+          type: "Card",
+          billingDetails: billingDetails,
+        });
+        if (error) {
+          alert(`Payment Confirmation Error ${error.message}`);
+          setLoading(false);
+        } else if (paymentIntent) {
+          setLoading(false);
+          alert("Payment Successful");
+          navigation.navigate("Home");
+          // console.log("Payment successful", paymentIntent);
+        }
+      }
+    } catch (error) {
+      console.log("hello", error);
+    }
   };
 
   const handleModalVisible = () => {
@@ -61,6 +114,44 @@ const BookDetails = ({ route, navigation }) => {
       setCount(count + 1);
     } else if (value === "minus" && count > 0) {
       setCount(count - 1);
+    }
+  };
+
+  const handleBookmark = async (value) => {
+    // Toast.info({
+    //   content: 'Toast without mask',
+    //   mask: false,
+    // })
+    const bookmarkData = await AsyncStorage.getItem("bookmarks");
+    if (bookmarkData.length > 0) {
+      const data = JSON.parse(bookmarkData);
+      if (data.includes(value)) {
+        const index = data.indexOf(value);
+        if (index > -1) {
+          data.splice(index, 1);
+        }
+        const newData = JSON.stringify(data);
+        await AsyncStorage.setItem("bookmarks", newData);
+        alert("Removed this from Bookmark");
+        setIsBookmarked(false);
+      } else {
+        data.push(value);
+        const newData = JSON.stringify(data);
+        await AsyncStorage.setItem("bookmarks", newData);
+        // console.log("hello", newData);
+        alert("Added this in Bookmark");
+        setIsBookmarked(true);
+      }
+      // console.log("bookmark", newData);
+    }
+    // localStorage.setItem();
+    else {
+      const data = [value];
+      const newData = JSON.stringify(data);
+      console.log("helllo", newData);
+      await AsyncStorage.setItem("bookmarks", newData);
+      alert("Added this in Bookmark");
+      setIsBookmarked(true);
     }
   };
 
@@ -172,10 +263,23 @@ const BookDetails = ({ route, navigation }) => {
               {item.authorName}
             </Text>
           </View>
-          <View
-            style={{ backgroundColor: "white", padding: 7, borderRadius: 50 }}
-          >
-            <Ionicons name="bookmark" size={20} color="#4f6b6a" />
+          <View>
+            <Provider>
+              <TouchableOpacity
+                style={{
+                  backgroundColor: `${isBookmarked ? "white" : "#648f8d"}`,
+                  padding: 7,
+                  borderRadius: 50,
+                }}
+                onPress={() => handleBookmark(item.id)}
+              >
+                <Ionicons
+                  name="bookmark"
+                  size={20}
+                  color={`${isBookmarked ? "#648f8d" : "white"}`}
+                />
+              </TouchableOpacity>
+            </Provider>
           </View>
         </View>
         <View
@@ -351,9 +455,20 @@ const BookDetails = ({ route, navigation }) => {
               paddingHorizontal: 20,
             }}
           >
-            <Text style={{ fontSize: 16, fontWeight: "700" }}>
-              Payment Information
-            </Text>
+            <View
+              style={{
+                flexDirection: "row",
+                alignItems: "center",
+                justifyContent: "space-between",
+              }}
+            >
+              <Text style={{ fontSize: 16, fontWeight: "700" }}>
+                Payment Information
+              </Text>
+              <TouchableOpacity onPress={() => handleModalVisible()}>
+                <Entypo name="circle-with-cross" size={24} color="black" />
+              </TouchableOpacity>
+            </View>
             <TextInput
               style={{
                 backgroundColor: "#edeceb",
@@ -414,6 +529,7 @@ const BookDetails = ({ route, navigation }) => {
                 padding: 10,
                 borderRadius: 5,
               }}
+              disabled={loading}
               onPress={handlePayment}
             >
               <Text
@@ -424,7 +540,7 @@ const BookDetails = ({ route, navigation }) => {
                   textAlign: "center",
                 }}
               >
-                Pay
+                {loading ? "Please Wait..." : "Pay"}
               </Text>
             </TouchableOpacity>
           </View>

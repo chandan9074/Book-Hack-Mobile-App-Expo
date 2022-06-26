@@ -2,6 +2,7 @@ import React from "react";
 import { Text, View } from "react-native";
 import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
 import Home from "../../screen/Home";
+import Bookmarks from "../../screen/Bookmarks";
 import { AntDesign, Ionicons, FontAwesome, Feather } from "@expo/vector-icons";
 
 const BottomNavigation = () => {
@@ -44,7 +45,7 @@ const BottomNavigation = () => {
       />
       <Tab.Screen
         name="Bookmark"
-        component={Home}
+        component={Bookmarks}
         options={{
           header: () => null,
           tabBarIcon: ({ focused }) => (
@@ -53,7 +54,7 @@ const BottomNavigation = () => {
                 name="bookmark-o"
                 size={24}
                 color="#ed8037"
-                style={{ opacity: focused ? 1 : 0.4, }}
+                style={{ opacity: focused ? 1 : 0.4 }}
               />
             </View>
           ),
@@ -70,7 +71,7 @@ const BottomNavigation = () => {
                 name="user"
                 size={24}
                 color="#ed8037"
-                style={{ opacity: focused ? 1 : 0.4, }}
+                style={{ opacity: focused ? 1 : 0.4 }}
               />
             </View>
           ),
@@ -91,9 +92,9 @@ const screenOptions = {
     bottom: 0,
     right: 0,
     borderTopWidth: 0,
-    height:60,
-    borderTopLeftRadius:15,
-    borderTopRightRadius:15,
+    height: 60,
+    borderTopLeftRadius: 15,
+    borderTopRightRadius: 15,
     // backgroundColor: "rgba(200, 200, 200, 0.2)",
     elevation: 0,
     // marginBottom: 10,

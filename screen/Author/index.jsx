@@ -174,7 +174,10 @@ const Author = ({ route, navigation }) => {
 
   const renderBooks = () => {
     const renderItem = ({ item }) => (
-      <TouchableOpacity style={styles.bookContainer}>
+      <TouchableOpacity
+        style={styles.bookContainer}
+        onPress={() => navigation.navigate("SingleBook", { item, bookList })}
+      >
         <View
           style={{
             shadowColor: "black",
